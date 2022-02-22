@@ -22,10 +22,11 @@ class UserController extends Controller
 
             $params_array = array_map('trim',$params_array);
             // VALIDATE USER INFO
+            
             $validate = \Validator::make($params_array,[
                 'name' => 'required|alpha|max:100',
                 'surname' => 'required|alpha|max:100',
-                'email' => 'required|string|email|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users', // COMPROBE IF USER EXISTS
                 'password' => 'required|string',
                 'password_confirmation' => 'required|string',
             ]);
@@ -34,7 +35,7 @@ class UserController extends Controller
             if($validate->fails()){
 
                 $data =  array(
-                    'status' => 'Failed',
+                    'status' => 'error',
                     'code' => '400',
                     'message' => 'User NOT VALIDATED',
                     'errors' => $validate->errors()
@@ -53,7 +54,7 @@ class UserController extends Controller
                     $user->name = $params_array['name'];
                     $user->surname = $params_array['surname'];
                     $user->email = $params_array['email'];
-                    $user->password = hash::make($params_array['password']);
+                    $user->password = hash('sha256',$params_array['password']); // HASH PASSWORD
                     $user->username = $params_array['username'];
                     $user->save();
 
@@ -71,7 +72,7 @@ class UserController extends Controller
                 else{
 
                     $data =  array(
-                        'status' => 'Failed',
+                        'status' => 'error',
                         'code' => '400',
                         'message' => "Password doesn't match"
                     );
@@ -84,7 +85,7 @@ class UserController extends Controller
             }
         }else{
             $data =  array(
-                'status' => 'Failed',
+                'status' => 'error',
                 'code' => '400',
                 'message' => 'Format Invalid'
             );
@@ -92,11 +93,9 @@ class UserController extends Controller
  
 
 
-        // COMPORBE IF USER EXISTS
+ 
 
-        // HASH PASSWORD
 
-        // CREATE USER
 
 
      
@@ -105,7 +104,46 @@ class UserController extends Controller
     }
 
    public function login(Request $request){
-        return "Register User Function";
+
+        // GET USER INFO
+        $json = $request->input('json',null);
+        $params = json_decode($json); //object
+        $params_array = json_decode($json,true); //array
+        $jwtAuth = new \JwtAuth();
+
+        if(!empty($params) && !empty($params_array)){
+            $params_array = array_map('trim',$params_array); // trim fields 
+
+            // validate info
+            $validate = \Validator::make($params_array,[       
+                'email' => 'required|string|email',
+                'password' => 'required|string',
+            ]);
+            
+            if($validate->fails()){
+                $signup =  array(
+                    'status' => 'error',
+                    'code' => '400',
+                    'message' => 'Login Failed',
+                    'errors' => $validate->errors()
+                );
+           }else{
+            $email = $params_array['email'];
+            $password = hash('sha256', $params_array['password']);
+            $signup =  $jwtAuth->signup($email,$password,true);
+
+           }
+        }
+        else{
+            $signup = array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'Login Failed'
+
+            );
+        }
+        
+        return response()->json($signup);
     }
     public function update(Request $request){
        return "Update User Function";
@@ -119,7 +157,7 @@ class UserController extends Controller
 {
 "name":"Luis",
 "surname" :  "Maldonado",
-"email" : "santiagodmaldon@gmail.com",
+"email" : "luisito@luisito.com",
 "username": "luissxxxx",
 "password": "santiago123",
 "password_confirmation" : "santiago123"
