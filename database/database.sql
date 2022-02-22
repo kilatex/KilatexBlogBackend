@@ -7,8 +7,8 @@ id int(255) auto_increment not null,
 name        varchar(50) NOT NULL,
 surname     varchar(100) NOT NULL,
 role        varchar(20),
-email       varchar(255) NOT NULL,
-username    varchar(255) NOT NULL,
+email       varchar(255) NOT NULL UNIQUE,
+username    varchar(255) NOT NULL UNIQUE,
 password    varchar(255) NOT NULL,
 description text,
 image       varchar(255),
@@ -20,7 +20,7 @@ CONSTRAINT pk_users PRIMARY KEY(id)
 
 CREATE TABLE IF NOT EXISTS  categories(
 id int(255) auto_increment not null,
-name        varchar(100) NOT NULL,
+name        varchar(100) NOT NULL UNIQUE,
 created_at  datetime,
 updated_at  datetime,
 CONSTRAINT pk_categories PRIMARY KEY(id)
