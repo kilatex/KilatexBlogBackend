@@ -6,8 +6,23 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-      public function prueba(Request $request){
-        echo "<h1> CONTROLADOR POST -> PRUEBA </h1>";
-        die();
-    }
+    
+     public function create(Request $request){
+         return "Create Post Function";
+     }
+
+
+     public function update(Request $request){
+        return "Update Post Function";
+     }
+
+     public function list(Request $request){
+         return "List Posts Function";
+     }
+
+     public function delete(Request $request){
+        return "Delete Post Function";
+     }
+
+
 }

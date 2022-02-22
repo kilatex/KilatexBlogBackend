@@ -23,3 +23,10 @@ Route::get('/', function () {
 Route::get('/user/prueba', [UserController::class, 'prueba']);
 Route::get('/post/prueba', [PostController::class, 'prueba']);
 Route::get('/category/prueba', [CategoryController::class, 'prueba']);
+
+
+// FORMAL ROUTES
+Route::post('api/register', [UserController::class,'register']);
+Route::post('api/login', [UserController::class,'login']);
+
+
