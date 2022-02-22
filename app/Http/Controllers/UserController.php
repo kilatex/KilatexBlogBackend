@@ -8,9 +8,25 @@ class UserController extends Controller
 {
 
     public function register(Request $request){
-        $name =  $request->input('name');
-        $surname = $request->input('surname');
-        return "Your Name Is $name - $surname ";
+        
+        // GET USER INFO
+
+        // VALIDATE USER INFO
+
+        // COMPORBE IF USER EXISTS
+
+        // HASH PASSWORD
+
+        // CREATE USER
+
+
+        $data =  array(
+            'status' => 'error',
+            'code' => '404',
+            'message' => 'User not Registered'
+        );
+
+        return response()->json($data,$data['code']);
     }
 
    public function login(Request $request){
