@@ -15,4 +15,11 @@ class Post extends Model
         'image'
     ];
 
+    public function user(){
+        return $this->belongTo('App\Models\User','user_id');
+    }
+
+    public function category(){
+        return $this->belongsTo('App\Models\Category','category_id');
+    }
 }
