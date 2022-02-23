@@ -146,7 +146,45 @@ class UserController extends Controller
         return response()->json($signup);
     }
     public function update(Request $request){
-       return "Update User Function";
+      
+        //Comprobe if User is AUTH
+        $token = $request->header('Authorization');
+        $jwtAuth = new \jwtAuth();
+        $checkToken = $jwtAuth->checkToken($token);
+
+        if($checkToken){
+            
+            // GET INFO 
+            $json = $request->input('json',null);
+            $params = json_decode($json);
+            $params_array = json_decode($json,true);
+
+            $user = $jwtAuth->checkToken($token,true);
+            var_dump($user);
+            die();
+            // VALIDATE INFO
+            $validate = \Validator::make($params_array,[
+                'name' => 'required|alpha|max:100',
+                'surname' => 'required|alpha|max:100',
+                'username' => 'required|string|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users,'.$user->id, // COMPROBE IF USER EXISTS
+            ]);
+       
+
+            // UPDATE USER
+
+            // RETURN ARRAY
+
+        }else{
+
+            $data = array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'User not updated'
+            );
+        }
+
+        return response()->json($update,$update['code']);
     }
 
 
