@@ -6,6 +6,7 @@ use  App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -234,12 +235,35 @@ class UserController extends Controller
 
 
     public function uploadAvatar(Request $request){
+        // GET IMAGE
+        $path1 = $request->file('file0');
+        
+        // SAVE IMAGE
+        if($path1){
+          
+            
+            
+        
+                    //IMAGE 1
+                    $image_path_name1 = time().$path1->getClientOriginalName();
 
-        $data = array(
-            'status' => 'error',
-            'code' => '400',
-            'message' => 'Upload Avatar Failed'
-        );
+                   
+
+                    Storage::disk('users')->put($image_path_name1, \File::get($path1));
+            
+            $data = array(
+                'status' => 'success',
+                'code' => '200',
+                'image' => $image_path_name1
+            );
+        }else{
+            $data = array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'Upload Avatar Failed'
+            );
+        }
+      
 
         
         return response()->json($data);
