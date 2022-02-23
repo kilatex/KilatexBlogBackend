@@ -144,12 +144,7 @@ class UserController extends Controller
     }
     public function update(Request $request){
       
-        //Comprobe if User is AUTH
-        $token = $request->header('Authorization');
-        $jwtAuth = new \JwtAuth();
-        $checkToken = $jwtAuth->checkToken($token);   
-
-        if($checkToken){
+  
             
             // GET INFO 
             $json = $request->input('json',null);
@@ -175,7 +170,7 @@ class UserController extends Controller
                 $data =  array(
                     'status' => 'error',
                     'code' => '400',
-                    'message' => 'Login Failed',
+                    'message' => 'Updated Failed',
                     'errors' => $validate->errors()
                 );
            }else{
@@ -233,18 +228,22 @@ class UserController extends Controller
             // RETURN ARRAY
             return response()->json($data);
 
-        }else{
+        
 
-            $data = array(
-                'status' => 'error',
-                'code' => '400',
-                'message' => 'User not updated'
-            );
-        }
-
-        return response()->json($update,$update['code']);
     }
 
+
+    public function uploadAvatar(Request $request){
+
+        $data = array(
+            'status' => 'error',
+            'code' => '400',
+            'message' => 'Upload Avatar Failed'
+        );
+
+        
+        return response()->json($data);
+    }
 
 
 }
