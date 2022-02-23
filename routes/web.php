@@ -25,8 +25,8 @@ Route::get('/post/prueba', [PostController::class, 'prueba']);
 Route::get('/category/prueba', [CategoryController::class, 'prueba']);
 
 
-// FORMAL ROUTES
+// USER ROUTES
 Route::post('api/register', [UserController::class,'register']);
 Route::post('api/login', [UserController::class,'login']);
-
+Route::post('api/update', [UserController::class,'update']);
 

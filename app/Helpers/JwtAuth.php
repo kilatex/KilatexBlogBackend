@@ -39,7 +39,7 @@ class JwtAUth {
 
             $jwt = JWT::encode($token,$this->key, 'HS256' );
             $decoded = JWT::decode($jwt, new Key($this->key, 'HS256'));
-
+         
             if(is_null($getToken)){
                 $data =  $jwt;
             }else{
@@ -61,17 +61,20 @@ class JwtAUth {
     }
 
     public function checkToken($jwt,$getidentity = false){
+
         $auth = false;
+            
         try {
             $jwt = str_replace('"','',$jwt);
-            $decode = JWT::decode($jwt, $this->key, ['HS256']);
+            $decode = JWT::decode($jwt, new Key($this->key, 'HS256'));
+
         } catch (\UnexpectedValueException $e) {
             $auth = false;
         } catch(\DomainException $e){
             $auth = false;
             
-        }
-
+        }   
+       
         if( !empty($decode) && is_object($decode) && isset($decode->sub)){
             $auth  = true;
         }else{
@@ -79,7 +82,7 @@ class JwtAUth {
         }
 
         if($getidentity){
-            return $decoded;
+            return $decode;
         }
 
         return $auth;

@@ -78,9 +78,7 @@ class UserController extends Controller
                     );
 
                     return response()->json($data);
-                }
-
-             
+                }        
 
             }
         }else{
@@ -90,16 +88,7 @@ class UserController extends Controller
                 'message' => 'Format Invalid'
             );
         }
- 
-
-
- 
-
-
-
-
-     
-
+  
         return response()->json($data,$data['code']);
     }
 
@@ -128,9 +117,17 @@ class UserController extends Controller
                     'errors' => $validate->errors()
                 );
            }else{
+
             $email = $params_array['email'];
             $password = hash('sha256', $params_array['password']);
-            $signup =  $jwtAuth->signup($email,$password,true);
+
+            if(!empty($params->getToken)){
+                $signup =  $jwtAuth->signup($email,$password);
+
+            }else{
+                $signup =  $jwtAuth->signup($email,$password,'messi');
+
+            }
 
            }
         }
@@ -143,14 +140,14 @@ class UserController extends Controller
             );
         }
         
-        return response()->json($signup);
+        return response()->json($signup,200);
     }
     public function update(Request $request){
       
         //Comprobe if User is AUTH
         $token = $request->header('Authorization');
-        $jwtAuth = new \jwtAuth();
-        $checkToken = $jwtAuth->checkToken($token);
+        $jwtAuth = new \JwtAuth();
+        $checkToken = $jwtAuth->checkToken($token);   
 
         if($checkToken){
             
@@ -160,20 +157,81 @@ class UserController extends Controller
             $params_array = json_decode($json,true);
 
             $user = $jwtAuth->checkToken($token,true);
-            var_dump($user);
-            die();
+   
+           
             // VALIDATE INFO
             $validate = \Validator::make($params_array,[
-                'name' => 'required|alpha|max:100',
-                'surname' => 'required|alpha|max:100',
-                'username' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users,'.$user->id, // COMPROBE IF USER EXISTS
+                'name' => 'alpha|max:100',
+                'surname' => 'alpha|max:100',
+                'username' => 'string|max:255|unique:users,username,'.$user->sub,
+                'email' => 'string|email|max:255|unique:users,email,'.$user->sub, // COMPROBE IF USER EXISTS
+                'password' => 'string',
+                'password_confirmation' => 'string',
             ]);
+
+
+       
+            if($validate->fails()){
+                $data =  array(
+                    'status' => 'error',
+                    'code' => '400',
+                    'message' => 'Login Failed',
+                    'errors' => $validate->errors()
+                );
+           }else{
+            // UPDATE USER
        
 
-            // UPDATE USER
+                $password = empty($params_array['password']) ? null : $params_array['password'];
+                $password_confirmation = empty($params_array['password_confirmation']) ? null : $params_array['password_confirmation'];
 
+ 
+              
+
+                if(($password != null || $password_confirmation != null) && $password == $password_confirmation){
+                    $params_array['password'] = hash('sha256', $params_array['password']);
+                }else{
+                    $data = array(
+                        'status' => 'error',
+                        'code' => '400',
+                        'message' => "Passwords doesn't match"
+                    );
+
+                    return response()->json($data);
+
+                }
+            
+                // FIELDS THAT NOT GONNA BE UPDATED
+                unset($params_array['id']);
+                unset($params_array['role']);
+                unset($params_array['created_at']);
+                unset($params_array['remember_token']);
+                unset($params_array['password_confirmation']);
+
+                $userToUpdate = User::where('id',$user->sub);
+                if($userToUpdate){
+                    $userToUpdate->update($params_array);
+                    $data = array(
+                        'status' => 'success',
+                        'code' => '200',
+                        'message' => 'User Updated Successfully',
+                        'changes' => $params_array
+                    );
+                }else{
+                    $data = array(
+                        'status' => 'error',
+                        'code' => '400',
+                        'message' => 'User not updated'
+                    );
+                }
+              
+        
+
+           }
+        
+        
             // RETURN ARRAY
+            return response()->json($data);
 
         }else{
 
@@ -194,11 +252,12 @@ class UserController extends Controller
 /* JSON EXAMPLE
 {
 "name":"Luis",
-"surname" :  "Maldonado",
-"email" : "luisito@luisito.com",
-"username": "luissxxxx",
+"surname" :  "Maldonadito",
+"email" : "luchitooo@luisito.com",
+"username": "luisitazoooo",
+
+}
 "password": "santiago123",
 "password_confirmation" : "santiago123"
-}
-
 */
+
