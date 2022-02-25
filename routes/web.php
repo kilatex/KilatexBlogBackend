@@ -23,9 +23,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/user/prueba', [UserController::class, 'prueba']);
-Route::get('/post/prueba', [PostController::class, 'prueba']);
-Route::get('/category/prueba', [CategoryController::class, 'prueba']);
+
 
 
 // USER ROUTES
@@ -36,3 +34,6 @@ Route::post('api/upload-avatar', [UserController::class,'uploadAvatar'])->middle
 Route::get('api/get-image/{filename}', [UserController::class,'getAvatar']);
 Route::get('api/get-user/{id}', [UserController::class,'getUser']);
 
+
+// CATEGORY ROUTES
+Route::resource('api/category', '\App\Http\Controllers\CategoryController');

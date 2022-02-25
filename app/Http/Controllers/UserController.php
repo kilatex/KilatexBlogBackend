@@ -296,7 +296,7 @@ class UserController extends Controller
             $data = array(
                 'status' => 'error',
                 'code' => '404',
-                'message' => 'Avatar not founded',
+                'message' => 'Avatar not found',
 
             );
         }
@@ -316,7 +316,7 @@ class UserController extends Controller
 
                 'status' => 'error',
                 'code' => '404',
-                'message' => 'User not founded',
+                'message' => 'User not found',
 
             );
         }
