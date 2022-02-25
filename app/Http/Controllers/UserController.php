@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Helpers\JwtAuth;
 
 class UserController extends Controller
 {
@@ -93,13 +94,13 @@ class UserController extends Controller
         return response()->json($data,$data['code']);
     }
 
-   public function login(Request $request){
+    public function login(Request $request){
 
         // GET USER INFO
         $json = $request->input('json',null);
         $params = json_decode($json); //object
         $params_array = json_decode($json,true); //array
-        $jwtAuth = new \JwtAuth();
+        
 
         if(!empty($params) && !empty($params_array)){
             $params_array = array_map('trim',$params_array); // trim fields 
@@ -143,6 +144,7 @@ class UserController extends Controller
         
         return response()->json($signup,200);
     }
+
     public function update(Request $request){
       
   
@@ -151,16 +153,19 @@ class UserController extends Controller
             $json = $request->input('json',null);
             $params = json_decode($json);
             $params_array = json_decode($json,true);
+           
 
+            $token = $request->header('Authorization');
+            $jwtAuth = new \JwtAuth();
             $user = $jwtAuth->checkToken($token,true);
-   
+
            
             // VALIDATE INFO
             $validate = \Validator::make($params_array,[
                 'name' => 'alpha|max:100',
                 'surname' => 'alpha|max:100',
                 'username' => 'string|max:255|unique:users,username,'.$user->sub,
-                'email' => 'string|email|max:255|unique:users,email,'.$user->sub, // COMPROBE IF USER EXISTS
+                'email' => 'string|email|max:255|unique:users,email,'.$user->sub, // COMPROBE IF EMAIL EXISTS
                 'password' => 'string',
                 'password_confirmation' => 'string',
             ]);
@@ -186,7 +191,8 @@ class UserController extends Controller
 
                 if(($password != null || $password_confirmation != null) && $password == $password_confirmation){
                     $params_array['password'] = hash('sha256', $params_array['password']);
-                }else{
+
+                }elseif($password != $password_confirmation ){
                     $data = array(
                         'status' => 'error',
                         'code' => '400',
@@ -194,7 +200,6 @@ class UserController extends Controller
                     );
 
                     return response()->json($data);
-
                 }
             
                 // FIELDS THAT NOT GONNA BE UPDATED
@@ -237,49 +242,98 @@ class UserController extends Controller
     public function uploadAvatar(Request $request){
         // GET IMAGE
         $path1 = $request->file('file0');
-        
-        // SAVE IMAGE
-        if($path1){
-          
-            
-            
-        
+        $token = $request->header('Authorization');
+        $jwtAuth = new \JwtAuth();
+        $user = $jwtAuth->checkToken($token,true);
+
+        $validate = \Validator::make($request->all(),[
+            'file0' => 'required|image'
+        ]);
+
+   
+        if($validate->fails()){
+            $data =  array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'Upload Avatar Failed',
+                'errors' => $validate->errors()
+            );
+        }else{
+                $user_auth = User::where('id',$user->sub)->first();
+       
+
                     //IMAGE 1
                     $image_path_name1 = time().$path1->getClientOriginalName();
 
                    
-
+                    // SAVE IMAGE     
                     Storage::disk('users')->put($image_path_name1, \File::get($path1));
+                    $user_auth->image = $image_path_name1;
+                    $user_auth->save();
+
             
             $data = array(
                 'status' => 'success',
                 'code' => '200',
                 'image' => $image_path_name1
             );
-        }else{
-            $data = array(
-                'status' => 'error',
-                'code' => '400',
-                'message' => 'Upload Avatar Failed'
-            );
         }
+        
       
 
-        
+    
         return response()->json($data);
     }
 
+    public function getAvatar($filename){
+        $isset = Storage::disk('users')->exists($filename);
+
+        if($isset){
+            $file =  Storage::disk('users')->get($filename);
+
+            return new Response($file,200);
+        }else{
+            $data = array(
+                'status' => 'error',
+                'code' => '404',
+                'message' => 'Avatar not founded',
+
+            );
+        }
+    }
+
+    public function getUser($id){
+        $user = User::find($id);
+
+        if(is_object($user)){
+            $data = array(
+                'status' => 'success',
+                'code' => '200',
+                'user' => $user
+            ); 
+        }else{
+            $data = array(
+
+                'status' => 'error',
+                'code' => '404',
+                'message' => 'User not founded',
+
+            );
+        }
+
+        return $data;
+    }
 
 }
 
 /* JSON EXAMPLE
 {
-"name":"Luis",
+"name" : "Luis",
 "surname" :  "Maldonadito",
-"email" : "luchitooo@luisito.com",
-"username": "luisitazoooo",
-
+"email" : "lucha@luchandoooo.com",
+"username": "luisitazoooo"
 }
+
 "password": "santiago123",
 "password_confirmation" : "santiago123"
 */
