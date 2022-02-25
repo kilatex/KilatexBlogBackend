@@ -11,7 +11,8 @@ class PostController extends Controller
 {
     
      public function __construct(){
-        $this->middleware('api.auth', ['except' => ['index','show']]);
+        $this->middleware('api.auth', ['except'
+             => ['index','show','getImage','postsByUser']]);
      }
 
      public function index(Request $request){
@@ -211,7 +212,7 @@ class PostController extends Controller
      }
 
 
-     public function getImage($filename){
+    public function getImage($filename){
          
         // COMPROBE IF FILE EXISTS
             $isset = Storage::disk('images')->exists($filename);
@@ -231,7 +232,59 @@ class PostController extends Controller
             }
             
         // RETURN IMAGE OR ERROR
-     }
+    }
+
+    public function postsByUser($id){
+
+        $posts = Post::where('user_id',$id)->get();
+        $post_json = json_decode($posts);
+
+        if(!empty($post_json)){
+            $data = array(
+                'status' => 'success',
+                'code' => '200',
+                'posts' => $posts
+            );
+        }else{
+
+            $data = array(
+                'status' => 'error',
+                'code' => '400',
+                'Message' => "This User has no posts "
+            );
+        }
+        return response()->json($data);
+
+
+    }
+
+
+    public function postsByCategory($id){
+
+        $posts = Post::where('category_id',$id)->get();
+
+        $post_json = json_decode($posts);
+
+        if(!empty($post_json)){
+            $data = array(
+                'status' => 'success',
+                'code' => '200',
+                'posts' => $posts
+            );
+        }else{
+
+            $data = array(
+                'status' => 'error',
+                'code' => '400',
+                'Message' => "This Category has no posts"
+            );
+        }
+        
+        return response()->json($data);
+
+
+    }
+    
     private function getIdentity($request){
         $token = $request->header('Authorization');
         $jwtAuth = new \JwtAuth();

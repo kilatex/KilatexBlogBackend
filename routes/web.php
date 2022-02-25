@@ -37,5 +37,10 @@ Route::get('api/get-user/{id}', [UserController::class,'getUser']);
 
 // CATEGORY ROUTES
 Route::resource('api/category', '\App\Http\Controllers\CategoryController');
+
+// CATEGORY ROUTES
+
 Route::resource('api/post', '\App\Http\Controllers\PostController');
 Route::get('api/post/image/{filename}', [PostController::class,'getImage']);
+Route::get('api/post/user/{id}', [PostController::class,'postsByUser']);
+Route::get('api/post/category/{id}', [PostController::class,'postsByCategory']);
