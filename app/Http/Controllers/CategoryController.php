@@ -17,8 +17,7 @@ class CategoryController extends Controller
     public function show($id){
 
         $category = Category::find($id)->first();
-
-       
+      
         if(is_object($category)){
             $data = array(
                 'status' => 'success',

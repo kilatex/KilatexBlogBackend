@@ -259,7 +259,7 @@ class UserController extends Controller
                 'errors' => $validate->errors()
             );
         }else{
-                $user_auth = User::where('id',$user->sub)->first();
+                $user_auth = User::find($user->sub);
        
 
                     //IMAGE 1
