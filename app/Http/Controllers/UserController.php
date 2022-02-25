@@ -289,6 +289,7 @@ class UserController extends Controller
     }
 
     public function getAvatar($filename){
+        
         $isset = Storage::disk('users')->exists($filename);
 
         if($isset){

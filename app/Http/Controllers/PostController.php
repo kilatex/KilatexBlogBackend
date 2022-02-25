@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use  App\Models\Post;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -51,9 +53,8 @@ class PostController extends Controller
         $json = $request->input('json',null);
         $params_array = json_decode($json,true);
 
-        $token = $request->header('Authorization');
-        $jwtAuth = new \JwtAuth();
-        $user = $jwtAuth->checkToken($token,true);
+        $user = $this->getIdentity($request);
+ 
 
 
        if(!empty($params_array)){
@@ -63,11 +64,15 @@ class PostController extends Controller
                 'title' => 'required|string|max:256',
                 'content' => 'required|string',
                 'category' => 'required|integer',
-                'image' => 'required'
+            ]);
+
+            $image = $request->file('file0');
+            $validate_image = \Validator::make($request->all(),[
+                'file0' => 'required|image'
             ]);
 
             // If Validate fails
-            if($validate->fails()){
+            if($validate->fails() || $validate_image->fails()){
 
                 $data = array(
                     'status' => 'error',
@@ -84,8 +89,14 @@ class PostController extends Controller
                 $post->content = $params_array['content'];
                 $post->user_id = $user->sub;
                 $post->category_id = $params_array['category'];
-                $post->image = $params_array['image'];
-                $post->save();
+              
+
+                    // SAVE IMAGE
+                   $image_path_name = time().$image->getClientOriginalName();
+                   Storage::disk('images')->put($image_path_name, \File::get($image));
+                   $post->image = $image_path_name;
+                   
+                   $post->save();
 
                 $data = array(
                     'status' => 'success',
@@ -113,7 +124,10 @@ class PostController extends Controller
         // GET INFO and User
         $json = $request->input('json');
         $params_array = json_decode($json,true);
-        $post = Post::find($id);
+
+        $user = $this->getIdentity($request);
+        $post = Post::where('id',$id)->where('user_id',$user->sub)->first();
+
 
     
        
@@ -132,6 +146,8 @@ class PostController extends Controller
                 if($params_array['category'] != null){
                     $post->category_id = $params_array['category'];
                 }
+                
+                // UPDATE POST
                 $post->update($params_array);
                 
                 $data = array(
@@ -158,16 +174,72 @@ class PostController extends Controller
         }
      
 
-        // UPDATE POST
 
 
         //RETURN
         return response()->json($data);
      }
 
-     public function delete(Request $request){
-        return "Delete Post Function";
+     public function destroy($id,Request $request){
+        //GET POST
+        $user = $this->getIdentity($request);
+
+        $post = Post::where('id',$id)->where('user_id',$user->sub)->first();
+
+        if(is_object($post)){
+          
+
+            // DELETE
+            $post->delete();
+            $data = array(
+                'status' => 'success',
+                'code' => '200',
+                'message' => 'Post deleted'
+            );
+
+        }else{
+            $data = array(
+                'status' => 'error',
+                'code' => '404',
+                'Message' => 'Post not found'
+            );
+        }
+      
+
+        // RETURN
+        return response()->json($data);
      }
+
+
+     public function getImage($filename){
+         
+        // COMPROBE IF FILE EXISTS
+            $isset = Storage::disk('images')->exists($filename);
+            
+            if($isset){
+                // GET IMAGE
+                    $file =  Storage::disk('images')->get($filename);
+                    return new Response($file,200);
+            }else{
+                $data = array(
+                    'status' => 'error',
+                    'code' => '404',
+                    'Message' => 'FILE not found'
+                );
+
+                return response()->json($data);
+            }
+            
+        // RETURN IMAGE OR ERROR
+     }
+    private function getIdentity($request){
+        $token = $request->header('Authorization');
+        $jwtAuth = new \JwtAuth();
+        $user = $jwtAuth->checkToken($token,true);
+        return $user;
+    }
+
+    
 
 
 }
