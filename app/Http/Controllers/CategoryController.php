@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use  App\Models\Category;
+use App\Http\Middleware\ApiAuthMiddleware;
 
 class CategoryController extends Controller
 {
+      
+    public function __construct(){
+        $this->middleware('api.auth', ['except' => ['index','show']]);
+     }
+
     public function index(Request $request){
         $categories = Category::all();
 
@@ -95,58 +101,58 @@ class CategoryController extends Controller
 
 
     public function update($id,Request $request){
-            // GET INFO
-            $json = $request->input('json');
-            $params_array = json_decode($json,true);
-    
-      
-    
-            if(!empty($params_array)){
-                
-                // VALIDATE INFO
-                $validate = \Validator::make($params_array,[
-                    'name' => 'required|string'
-                ]);
-    
-                if(!$validate->fails()){
-                    // SAVE CATEGORY
-                    $category = Category::find($id);
-                    $category->name = $params_array['name'];
-    
-                    $category->update();
-    
-    
-                    $data = array(
-                        'status' => 'success',
-                        'code' => '200',
-                        'message' => 'Category  updated',
-                        'category' => $category->name
-                    );
+        // GET INFO
+        $json = $request->input('json');
+        $params_array = json_decode($json,true);
 
-                }else{
-                    $data = array(
-                        'status' => 'error',
-                        'code' => '400',
-                        'message' => 'Category NOT Updated',
-                        'error' => $validate->errors()
-                    );
-                }
-            
     
-                
+
+        if(!empty($params_array)){
+            
+            // VALIDATE INFO
+            $validate = \Validator::make($params_array,[
+                'name' => 'required|string'
+            ]);
+
+            if(!$validate->fails()){
+                // SAVE CATEGORY
+                $category = Category::find($id);
+                $category->name = $params_array['name'];
+
+                $category->update();
+
+
+                $data = array(
+                    'status' => 'success',
+                    'code' => '200',
+                    'message' => 'Category  updated',
+                    'category' => $category->name
+                );
+
             }else{
                 $data = array(
                     'status' => 'error',
                     'code' => '400',
-                    'message' => 'Category not updated'
+                    'message' => 'Category NOT Updated',
+                    'error' => $validate->errors()
                 );
             }
-       
+        
+
+            
+        }else{
+            $data = array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'Category not updated'
+            );
+        }
     
-    
-            // RETURN RESULT
-    
-            return response()->json($data);
+
+
+        // RETURN RESULT
+
+        return response()->json($data);
     }
 
 
