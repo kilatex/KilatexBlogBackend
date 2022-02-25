@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Storage;
 use App\Helpers\JwtAuth;
 
 class UserController extends Controller
-{
+{   
+    public function __construct(){
+        $this->middleware('api.auth', ['except' => ['index','show']]);
+    }
 
     public function register(Request $request){
         
