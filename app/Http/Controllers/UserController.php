@@ -30,7 +30,8 @@ class UserController extends Controller
             
             $validate = \Validator::make($params_array,[
                 'name' => 'required|alpha|max:100',
-                'surname' => 'required|alpha|max:100',
+                
+                'username' => 'required|alpha|max:100',
                 'email' => 'required|string|email|max:255|unique:users', // COMPROBE IF USER EXISTS
                 'password' => 'required|string',
                 'password_confirmation' => 'required|string',
@@ -57,10 +58,10 @@ class UserController extends Controller
 
                     $user->role = "ROLE_USER";
                     $user->name = $params_array['name'];
-                    $user->surname = $params_array['surname'];
                     $user->email = $params_array['email'];
                     $user->password = hash('sha256',$params_array['password']); // HASH PASSWORD
                     $user->username = $params_array['username'];
+
                     $user->save();
 
                     $data =  array(
@@ -332,13 +333,14 @@ class UserController extends Controller
 
 /* JSON EXAMPLE
 {
-"name" : "Luis",
-"surname" :  "Maldonadito",
-"email" : "lucha@luchandoooo.com",
-"username": "luisitazoooo"
+"name" : "Mafer",
+"surname" :  "Mafer",
+"email" : "mafer@mafer.com",
+"username": "maferrr"
+"password": "mafer123",
+"password_confirmation" : "mafer123"
 }
 
-"password": "santiago123",
-"password_confirmation" : "santiago123"
+
 */
 

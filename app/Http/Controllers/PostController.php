@@ -262,7 +262,6 @@ class PostController extends Controller
     public function postsByCategory($id){
 
         $posts = Post::where('category_id',$id)->get();
-
         $post_json = json_decode($posts);
 
         if(!empty($post_json)){
@@ -279,7 +278,7 @@ class PostController extends Controller
                 'Message' => "This Category has no posts"
             );
         }
-        
+
         return response()->json($data);
 
 
