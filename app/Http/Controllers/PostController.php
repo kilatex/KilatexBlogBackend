@@ -16,12 +16,13 @@ class PostController extends Controller
      }
 
      public function index(Request $request){
-        $posts = Post::all()->load('category');
-
+        $posts = Post::with('user')->with('category')->get();
+        
         $data = array(
             'status' => 'success',
             'code' => '200',
-            'posts' => $posts
+            'posts' => $posts,
+            
         );
 
         return response()->json($data);
