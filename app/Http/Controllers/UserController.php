@@ -343,6 +343,18 @@ class UserController extends Controller
         return $data;
     }
 
+    public function latestUsers(){
+        $users = User::orderBy('id','DESC')->limit(5)->get();
+        $data = array(
+            'status' => 'success',
+            'code' => '200',
+            'users' => $users,
+        );
+
+        return $data;
+
+    }
+
 }
 
 /* JSON EXAMPLE
