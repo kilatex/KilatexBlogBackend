@@ -25,6 +25,8 @@ class JwtAUth {
         if(is_object($user)){
             $signup = true;
         }
+        
+  
         // generate token with user auth
         if($signup == true){
             $token = array(
@@ -36,16 +38,18 @@ class JwtAUth {
                 'description' => $user->description,
                 'image' => $user->image,
                 'iat' => time(),
-                'exp' => time() + (7*24*60*60)
+                'exp' => time() + (7*24*60*60),
             );
 
             $jwt = JWT::encode($token,$this->key, 'HS256' );
             $decoded = JWT::decode($jwt, new Key($this->key, 'HS256'));
-         
+    
             if(is_null($getToken)){
                 $data =  $jwt;
             }else{
-                 $data = $decoded;
+                 $data = array(
+                    'token' => $jwt,
+                    'user' => $decoded);
             }
 
         }else{
@@ -69,7 +73,7 @@ class JwtAUth {
         try {
             $jwt = str_replace('"','',$jwt);
             $decode = JWT::decode($jwt, new Key($this->key, 'HS256'));
-
+           
         } catch (\UnexpectedValueException $e) {
             $auth = false;
         } catch(\DomainException $e){
@@ -84,6 +88,7 @@ class JwtAUth {
         }
 
         if($getidentity){
+
             return $decode;
         }
 

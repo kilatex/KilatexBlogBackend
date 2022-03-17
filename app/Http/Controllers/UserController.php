@@ -60,7 +60,8 @@ class UserController extends Controller
                     $user->email = $params_array['email'];
                     $user->password = hash('sha256',$params_array['password']); // HASH PASSWORD
                     $user->username = $params_array['username'];
-                    
+                    $user->surname = $params_array['surname'];
+
                     $user->save();
 
                     $data =  array(
@@ -103,10 +104,13 @@ class UserController extends Controller
         $json = $request->input('json',null);
         $params = json_decode($json); //object
         $params_array = json_decode($json,true); //array
-        
+
+
+
 
         if(!empty($params) && !empty($params_array)){
             $params_array = array_map('trim',$params_array); // trim fields 
+            $jwtAuth = new \JwtAuth();
 
             // validate info
             $validate = \Validator::make($params_array,[       
@@ -118,7 +122,7 @@ class UserController extends Controller
                 $signup =  array(
                     'status' => 'error',
                     'code' => '400',
-                    'message' => 'Login Failed',
+                    'message' => 'Login Failed, NOT VALIDATED',
                     'errors' => $validate->errors()
                 );
            }else{
@@ -130,8 +134,7 @@ class UserController extends Controller
                 $signup =  $jwtAuth->signup($email,$password);
 
             }else{
-                $signup =  $jwtAuth->signup($email,$password,'messi');
-
+                $signup =  $jwtAuth->signup($email,$password,true);
             }
 
            }
@@ -140,7 +143,7 @@ class UserController extends Controller
             $signup = array(
                 'status' => 'error',
                 'code' => '400',
-                'message' => 'Login Failed'
+                'message' => 'Login Failed, INPUTS EMPTY'
 
             );
         }
@@ -324,6 +327,18 @@ class UserController extends Controller
 
             );
         }
+
+        return $data;
+    }
+
+    public function getALl(){
+        
+        $users = User::orderBy('id','DESC')->paginate('6');
+        $data = array(
+            'status' => 'success',
+            'code' => '200',
+            'users' => $users,
+        );
 
         return $data;
     }

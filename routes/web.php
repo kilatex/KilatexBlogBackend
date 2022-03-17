@@ -30,15 +30,17 @@ Route::get('/', function () {
 Route::post('api/register', [UserController::class,'register']);
 Route::post('api/login', [UserController::class,'login']);
 Route::put('api/update', [UserController::class,'update']);
+Route::get('api/users', [UserController::class,'getAll']);
+
 Route::post('api/upload-avatar', [UserController::class,'uploadAvatar'])->middleware(ApiAuthMiddleware::class);
 Route::get('api/get-image/{filename}', [UserController::class,'getAvatar']);
 Route::get('api/get-user/{id}', [UserController::class,'getUser']);
 
 
-// CATEGORY ROUTES
+// category ROUTES
 Route::resource('api/category', '\App\Http\Controllers\CategoryController');
 
-// CATEGORY ROUTES
+// POST ROUTES
 
 Route::resource('api/post', '\App\Http\Controllers\PostController');
 Route::get('api/post/image/{filename}', [PostController::class,'getImage']);

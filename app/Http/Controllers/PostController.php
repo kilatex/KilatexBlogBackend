@@ -12,11 +12,11 @@ class PostController extends Controller
     
      public function __construct(){
         $this->middleware('api.auth', ['except'
-             => ['index','show','getImage','postsByUser']]);
+             => ['index','show','getImage','store','postsByUser']]);
      }
 
      public function index(Request $request){
-        $posts = Post::with('user')->with('category')->get();
+        $posts = Post::with('user')->with('category')->orderBy('id','DESC')->paginate('10');
         
         $data = array(
             'status' => 'success',
@@ -25,11 +25,11 @@ class PostController extends Controller
             
         );
 
-        return response()->json($data);
+        return $data;
      }
 
      public function show($id){
-         $post = Post::find($id) ? Post::find($id)->load('category') : null ;
+         $post = Post::find($id) ? Post::find($id)->load('category') : null;
 
 
          if(is_object($post)){
@@ -52,29 +52,28 @@ class PostController extends Controller
 
 
      public function store(Request $request){
-        $json = $request->input('json',null);
-        $params_array = json_decode($json,true);
+      
+        $title = $request->input('title');
+      
 
-        $user = $this->getIdentity($request);
+
+       $user = $this->getIdentity($request);
  
-
-
-       if(!empty($params_array)){
+       if(!empty($request)){
 
             // Validate Info
-            $validate = \Validator::make($params_array,[
+            $validate = \Validator::make($request->all(),[
                 'title' => 'required|string|max:256',
                 'content' => 'required|string',
                 'category' => 'required|integer',
+                'file0' => 'required'
             ]);
 
-            $image = $request->file('file0');
-            $validate_image = \Validator::make($request->all(),[
-                'file0' => 'required|image'
-            ]);
+            
+          
 
             // If Validate fails
-            if($validate->fails() || $validate_image->fails()){
+            if($validate->fails() /*|| $validate_image->fails() */){
 
                 $data = array(
                     'status' => 'error',
@@ -87,18 +86,19 @@ class PostController extends Controller
 
                 // Create Post
                 $post = new Post();
-                $post->title = $params_array['title'];
-                $post->content = $params_array['content'];
-                $post->user_id = $user->sub;
-                $post->category_id = $params_array['category'];
-              
-
-                    // SAVE IMAGE
-                   $image_path_name = time().$image->getClientOriginalName();
-                   Storage::disk('images')->put($image_path_name, \File::get($image));
-                   $post->image = $image_path_name;
-                   
-                   $post->save();
+                $post->title = $request->input('title');        
+                $post->content = $request->input('content');   
+                $post->user_id = $request->input('user_id');   
+                $post->category_id = $request->input('category'); 
+                
+                $image = $request->file('file0');
+                // SAVE IMAGE
+                $image_path_name = time().$image->getClientOriginalName();
+                Storage::disk('images')->put($image_path_name, \File::get($image));
+                $post->image = $image_path_name; 
+                
+                
+                $post->save();
 
                 $data = array(
                     'status' => 'success',
