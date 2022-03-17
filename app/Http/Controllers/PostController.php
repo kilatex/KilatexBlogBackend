@@ -16,7 +16,7 @@ class PostController extends Controller
      }
 
      public function index(Request $request){
-        $posts = Post::with('user')->with('category')->orderBy('id','DESC')->paginate('10');
+        $posts = Post::with('user')->with('category')->paginate('10');
         
         $data = array(
             'status' => 'success',
@@ -237,23 +237,15 @@ class PostController extends Controller
 
     public function postsByUser($id){
 
-        $posts = Post::where('user_id',$id)->get();
-        $post_json = json_decode($posts);
+        $posts = Post::where('user_id',$id)->orderBy('id','DESC')->paginate('5');
+        
+        $data = array(
+            'status' => 'success',
+            'code' => '200',
+            'posts' => $posts
+        );
 
-        if(!empty($post_json)){
-            $data = array(
-                'status' => 'success',
-                'code' => '200',
-                'posts' => $posts
-            );
-        }else{
-
-            $data = array(
-                'status' => 'error',
-                'code' => '400',
-                'Message' => "This User has no posts "
-            );
-        }
+  
         return response()->json($data);
 
 

@@ -12,7 +12,7 @@ use App\Helpers\JwtAuth;
 class UserController extends Controller
 {   
     public function __construct(){
-        $this->middleware('api.auth', ['except' => ['register','login', 'getAvatar', 'getUser']]);
+        $this->middleware('api.auth', ['except' => ['register','login']]);
     }
 
     public function register(Request $request){
