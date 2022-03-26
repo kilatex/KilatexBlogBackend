@@ -14,6 +14,7 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
@@ -34,3 +35,14 @@ class CreateUsersTable extends Migration
         Schema::dropIfExists('users');
     }
 }
+
+
+/*
+
+            $table->string('username')->unique();
+            $table->string('role');
+            $table->string('description');
+            $table->string('image');
+            $table->string('surname');
+
+*/

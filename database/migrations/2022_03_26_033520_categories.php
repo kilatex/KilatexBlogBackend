@@ -13,7 +13,13 @@ class Categories extends Migration
      */
     public function up()
     {
-        //
+        Schema::create('categories', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -23,6 +29,7 @@ class Categories extends Migration
      */
     public function down()
     {
-        //
+        Schema::dropIfExists('categories');
+
     }
 }
