@@ -14,22 +14,29 @@ class Posts extends Migration
     public function up()
     {
         Schema::create('posts', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
 
             $table->id();
-            $table->integer('user_id')->unsigned();
-            $table->integer('category_id')->unsigned();
+
+            $table->unsignedBigInteger('user_id');
+            $table->foreign("user_id")
+            ->references("id")
+            ->on("users")
+            ->onDelete("cascade")
+            ->onUpdate("cascade");
+
+            $table->unsignedBigInteger('category_id');
+            $table->foreign("category_id")
+            ->references("id")
+            ->on("categories")
+            ->onDelete("cascade")
+            ->onUpdate("cascade");
+
             $table->string('title');
             $table->text('content');
             $table->string('image');
             $table->timestamps();
+            $table->softDeletes();
 
-            $table->foreign('user_id')
-            ->references('id')
-            ->on('users');
-            $table->foreign('category_id')
-            ->references('id')
-            ->on('categories');
         });
     }
 
