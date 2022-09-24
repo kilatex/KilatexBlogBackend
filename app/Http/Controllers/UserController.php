@@ -17,149 +17,6 @@ class UserController extends Controller
         $this->middleware('api.auth', ['except' => ['register', 'login',]]);
     }
 
-    public function register(Request $request)
-    {
-
-        // GET USER INFO
-        $json = $request->input('json', null);
-        $params = json_decode($json); //object
-        $params_array = json_decode($json, true); //array
-
-
-        if (!empty($params) && !empty($params_array)) {
-
-            $params_array = array_map('trim', $params_array);
-            // VALIDATE USER INFO
-
-            $validate = \Validator::make($params_array, [
-                'name' => 'required|alpha|max:100',
-                'username' => 'required|string|max:100',
-                'email' => 'required|string|email|max:255|unique:users', // COMPROBE IF USER EXISTS
-                'password' => 'required|string',
-                'password_confirmation' => 'required|string',
-            ]);
-
-
-            if ($validate->fails()) {
-
-                $data =  array(
-                    'status' => 'error',
-                    'code' => '400',
-                    'message' => 'User NOT VALIDATED',
-                    'errors' => $validate->errors()
-                );
-
-                return response()->json($data);
-            } else {
-
-                //CREATE USER
-                if ($params_array['password'] == $params_array['password_confirmation']) {
-
-                    $user = new User();
-
-                    $user->role = "ROLE_USER";
-                    $user->name = $params_array['name'];
-                    $user->email = $params_array['email'];
-                    $user->password = hash('sha256', $params_array['password']); // HASH PASSWORD
-                    $user->username = $params_array['username'];
-                    $user->surname = $params_array['surname'];
-
-                    $user->save();
-
-                    $data =  array(
-                        'status' => 'success',
-                        'code' => '200',
-                        'message' => "User Registered",
-                        'user' => $user
-                    );
-
-                    return response()->json($data);
-                } else {
-
-                    $data =  array(
-                        'status' => 'error',
-                        'code' => '400',
-                        'message' => "Password doesn't match"
-                    );
-
-                    return response()->json($data);
-                }
-            }
-        } else {
-            $data =  array(
-                'status' => 'error',
-                'code' => '400',
-                'message' => 'Format Invalid'
-            );
-        }
-
-        return response()->json($data, $data['code']);
-    }
-
-    public function login(Request $request)
-    {
-
-        // GET USER INFO
-        $json = $request->input('json', null);
-        $params = json_decode($json); //object
-        $params_array = json_decode($json, true); //array
-
-
-
-
-        if (!empty($params) && !empty($params_array)) {
-            $params_array = array_map('trim', $params_array); // trim fields 
-            $jwtAuth = new \JwtAuth();
-
-            // validate info
-            $validate = \Validator::make($params_array, [
-                'email' => 'required|string|email',
-                'password' => 'required|string',
-            ]);
-
-            if ($validate->fails()) {
-                $signup =  array(
-                    'status' => 'error',
-                    'code' => '400',
-                    'message' => 'Login Failed, NOT VALIDATED',
-                    'errors' => $validate->errors()
-                );
-            } else {
-
-                $email = $params_array['email'];
-                $password = hash('sha256', $params_array['password']);
-
-                if (!empty($params->getToken)) {
-                    $signup =  $jwtAuth->signup($email, $password);
-                } else {
-                    $signup =  $jwtAuth->signup($email, $password, true);
-                }
-            }
-        } else {
-            $signup = array(
-                'status' => 'error',
-                'code' => '400',
-                'message' => 'Login Failed, INPUTS EMPTY'
-
-            );
-        }
-
-        return response()->json($signup, 200);
-    }
-
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        $data =  array(
-            'status' => 'success',
-            'code' => '200',
-            'message' => 'Logout successfully'
-        );
-        return response()->json($data);
-
-    }
     public function update(Request $request)
     {
 
@@ -203,7 +60,6 @@ class UserController extends Controller
         // RETURN ARRAY
         return response()->json($data);
     }
-
 
     public function uploadAvatar(Request $request)
     {
@@ -319,6 +175,7 @@ class UserController extends Controller
         return $data;
     }
 }
+
 
 /* JSON EXAMPLE
 {
