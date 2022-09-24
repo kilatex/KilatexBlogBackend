@@ -14,7 +14,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('api.auth', ['except' => ['register', 'login']]);
+        $this->middleware('api.auth', ['except' => ['register', 'login',]]);
     }
 
     public function register(Request $request)
@@ -150,11 +150,8 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
-
         $data =  array(
             'status' => 'success',
             'code' => '200',
