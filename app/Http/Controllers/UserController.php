@@ -8,27 +8,30 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\JwtAuth;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
-{   
-    public function __construct(){
-        $this->middleware('api.auth', ['except' => ['register','login']]);
+{
+    public function __construct()
+    {
+        $this->middleware('api.auth', ['except' => ['register', 'login']]);
     }
 
-    public function register(Request $request){
-        
+    public function register(Request $request)
+    {
+
         // GET USER INFO
-        $json = $request->input('json',null);
+        $json = $request->input('json', null);
         $params = json_decode($json); //object
-        $params_array = json_decode($json,true); //array
-     
+        $params_array = json_decode($json, true); //array
 
-        if(!empty($params) && !empty($params_array)){
 
-            $params_array = array_map('trim',$params_array);
+        if (!empty($params) && !empty($params_array)) {
+
+            $params_array = array_map('trim', $params_array);
             // VALIDATE USER INFO
-            
-            $validate = \Validator::make($params_array,[
+
+            $validate = \Validator::make($params_array, [
                 'name' => 'required|alpha|max:100',
                 'username' => 'required|string|max:100',
                 'email' => 'required|string|email|max:255|unique:users', // COMPROBE IF USER EXISTS
@@ -37,7 +40,7 @@ class UserController extends Controller
             ]);
 
 
-            if($validate->fails()){
+            if ($validate->fails()) {
 
                 $data =  array(
                     'status' => 'error',
@@ -47,18 +50,17 @@ class UserController extends Controller
                 );
 
                 return response()->json($data);
-
-            }else{
+            } else {
 
                 //CREATE USER
-                if($params_array['password'] == $params_array['password_confirmation']){
+                if ($params_array['password'] == $params_array['password_confirmation']) {
 
                     $user = new User();
 
                     $user->role = "ROLE_USER";
                     $user->name = $params_array['name'];
                     $user->email = $params_array['email'];
-                    $user->password = hash('sha256',$params_array['password']); // HASH PASSWORD
+                    $user->password = hash('sha256', $params_array['password']); // HASH PASSWORD
                     $user->username = $params_array['username'];
                     $user->surname = $params_array['surname'];
 
@@ -72,10 +74,7 @@ class UserController extends Controller
                     );
 
                     return response()->json($data);
-
-
-                }
-                else{
+                } else {
 
                     $data =  array(
                         'status' => 'error',
@@ -84,62 +83,59 @@ class UserController extends Controller
                     );
 
                     return response()->json($data);
-                }        
-
+                }
             }
-        }else{
+        } else {
             $data =  array(
                 'status' => 'error',
                 'code' => '400',
                 'message' => 'Format Invalid'
             );
         }
-  
-        return response()->json($data,$data['code']);
+
+        return response()->json($data, $data['code']);
     }
 
-    public function login(Request $request){
+    public function login(Request $request)
+    {
 
         // GET USER INFO
-        $json = $request->input('json',null);
+        $json = $request->input('json', null);
         $params = json_decode($json); //object
-        $params_array = json_decode($json,true); //array
+        $params_array = json_decode($json, true); //array
 
 
 
 
-        if(!empty($params) && !empty($params_array)){
-            $params_array = array_map('trim',$params_array); // trim fields 
+        if (!empty($params) && !empty($params_array)) {
+            $params_array = array_map('trim', $params_array); // trim fields 
             $jwtAuth = new \JwtAuth();
 
             // validate info
-            $validate = \Validator::make($params_array,[       
+            $validate = \Validator::make($params_array, [
                 'email' => 'required|string|email',
                 'password' => 'required|string',
             ]);
-            
-            if($validate->fails()){
+
+            if ($validate->fails()) {
                 $signup =  array(
                     'status' => 'error',
                     'code' => '400',
                     'message' => 'Login Failed, NOT VALIDATED',
                     'errors' => $validate->errors()
                 );
-           }else{
+            } else {
 
-            $email = $params_array['email'];
-            $password = hash('sha256', $params_array['password']);
+                $email = $params_array['email'];
+                $password = hash('sha256', $params_array['password']);
 
-            if(!empty($params->getToken)){
-                $signup =  $jwtAuth->signup($email,$password);
-
-            }else{
-                $signup =  $jwtAuth->signup($email,$password,true);
+                if (!empty($params->getToken)) {
+                    $signup =  $jwtAuth->signup($email, $password);
+                } else {
+                    $signup =  $jwtAuth->signup($email, $password, true);
+                }
             }
-
-           }
-        }
-        else{
+        } else {
             $signup = array(
                 'status' => 'error',
                 'code' => '400',
@@ -147,159 +143,128 @@ class UserController extends Controller
 
             );
         }
-        
-        return response()->json($signup,200);
+
+        return response()->json($signup, 200);
     }
 
-    public function update(Request $request){
-      
-  
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        $data =  array(
+            'status' => 'success',
+            'code' => '200',
+            'message' => 'Logout successfully'
+        );
+        return response()->json($data);
+
+    }
+    public function update(Request $request)
+    {
+
+        // GET INFO 
+
+
+        $token = $request->header('Authorization');
+        $jwtAuth = new \JwtAuth();
+        $user = $jwtAuth->checkToken($token, true);
+
+       // VALIDATE INFO
+        $validate = \Validator::make($request->all(), [
+            'name' => 'max:100',
+            'surname' => 'max:100',
+            'username' => 'string|max:255|unique:users,username,' . $user->sub,
+            'description' => 'string|max:255'
+        ]);
+
+        if ($validate->fails()) {
+            $data =  array(
+                'status' => 'error',
+                'code' => '400',
+                'message' => 'Updated Failed',
+                'errors' => $validate->errors()
+            );
             
-            // GET INFO 
-            $json = $request->input('json',null);
-            $params = json_decode($json);
-            $params_array = json_decode($json,true);
-           
+        } 
+        else {
+            $user = User::where('id',$user->sub)->first();
+            $user->update($request->all());
+            $data =  array(
+                'status' => 'success',
+                'code' => '200',
+                'message' => 'Updated success',
+                'user' => $user
+            );
 
-            $token = $request->header('Authorization');
-            $jwtAuth = new \JwtAuth();
-            $user = $jwtAuth->checkToken($token,true);
-
-           
-            // VALIDATE INFO
-            $validate = \Validator::make($params_array,[
-                'name' => 'alpha|max:100',
-                'surname' => 'alpha|max:100',
-                'username' => 'string|max:255|unique:users,username,'.$user->sub,
-                'email' => 'string|email|max:255|unique:users,email,'.$user->sub, // COMPROBE IF EMAIL EXISTS
-                'password' => 'string',
-                'password_confirmation' => 'string',
-            ]);
+        }
 
 
-       
-            if($validate->fails()){
-                $data =  array(
-                    'status' => 'error',
-                    'code' => '400',
-                    'message' => 'Updated Failed',
-                    'errors' => $validate->errors()
-                );
-           }else{
-            // UPDATE USER
-       
-
-                $password = empty($params_array['password']) ? null : $params_array['password'];
-                $password_confirmation = empty($params_array['password_confirmation']) ? null : $params_array['password_confirmation'];
-
- 
-              
-
-                if(($password != null || $password_confirmation != null) && $password == $password_confirmation){
-                    $params_array['password'] = hash('sha256', $params_array['password']);
-
-                }elseif($password != $password_confirmation ){
-                    $data = array(
-                        'status' => 'error',
-                        'code' => '400',
-                        'message' => "Passwords doesn't match"
-                    );
-
-                    return response()->json($data);
-                }
-            
-                // FIELDS THAT NOT GONNA BE UPDATED
-                unset($params_array['id']);
-                unset($params_array['role']);
-                unset($params_array['created_at']);
-                unset($params_array['remember_token']);
-                unset($params_array['password_confirmation']);
-
-                $userToUpdate = User::where('id',$user->sub);
-                if($userToUpdate){
-                    $userToUpdate->update($params_array);
-                    $data = array(
-                        'status' => 'success',
-                        'code' => '200',
-                        'message' => 'User Updated Successfully',
-                        'changes' => $params_array
-                    );
-                }else{
-                    $data = array(
-                        'status' => 'error',
-                        'code' => '400',
-                        'message' => 'User not updated'
-                    );
-                }
-              
-        
-
-           }
-        
-        
-            // RETURN ARRAY
-            return response()->json($data);
-
-        
-
+        // RETURN ARRAY
+        return response()->json($data);
     }
 
 
-    public function uploadAvatar(Request $request){
+    public function uploadAvatar(Request $request)
+    {
         // GET IMAGE
         $path1 = $request->file('file0');
         $token = $request->header('Authorization');
         $jwtAuth = new \JwtAuth();
-        $user = $jwtAuth->checkToken($token,true);
+        $user = $jwtAuth->checkToken($token, true);
 
-        $validate = \Validator::make($request->all(),[
+        $validate = \Validator::make($request->all(), [
             'file0' => 'required|image'
         ]);
 
-   
-        if($validate->fails()){
+
+        if ($validate->fails()) {
             $data =  array(
                 'status' => 'error',
                 'code' => '400',
                 'message' => 'Upload Avatar Failed',
                 'errors' => $validate->errors()
             );
-        }else{
-                $user_auth = User::find($user->sub);
-       
+        } else {
+            $user_auth = User::find($user->sub);
 
-                    //IMAGE 1
-                    $image_path_name1 = time().$path1->getClientOriginalName();
 
-                   
-                    // SAVE IMAGE     
-                    Storage::disk('users')->put($image_path_name1, \File::get($path1));
-                    $user_auth->image = $image_path_name1;
-                    $user_auth->save();
+            //IMAGE 1
+            $image_path_name1 = time() . $path1->getClientOriginalName();
 
-            
+
+            // SAVE IMAGE     
+            Storage::disk('users')->put($image_path_name1, \File::get($path1));
+            $user_auth->image = $image_path_name1;
+            $user_auth->save();
+
+
             $data = array(
                 'status' => 'success',
                 'code' => '200',
                 'image' => $image_path_name1
             );
         }
-        
-      
 
-    
+
+
+
         return response()->json($data);
     }
 
-    public function getAvatar($filename){
-        
+    public function getAvatar($filename)
+    {
+
         $isset = Storage::disk('users')->exists($filename);
 
-        if($isset){
+        if ($isset) {
             $file =  Storage::disk('users')->get($filename);
 
-            return new Response($file,200);
-        }else{
+            return new Response($file, 200);
+        } else {
             $data = array(
                 'status' => 'error',
                 'code' => '404',
@@ -309,16 +274,17 @@ class UserController extends Controller
         }
     }
 
-    public function getUser($id){
+    public function getUser($id)
+    {
         $user = User::find($id);
 
-        if(is_object($user)){
+        if (is_object($user)) {
             $data = array(
                 'status' => 'success',
                 'code' => '200',
                 'user' => $user
-            ); 
-        }else{
+            );
+        } else {
             $data = array(
 
                 'status' => 'error',
@@ -331,9 +297,10 @@ class UserController extends Controller
         return $data;
     }
 
-    public function getALl(){
-        
-        $users = User::orderBy('id','DESC')->paginate('6');
+    public function getAll()
+    {
+
+        $users = User::orderBy('id', 'DESC')->paginate('6');
         $data = array(
             'status' => 'success',
             'code' => '200',
@@ -343,8 +310,9 @@ class UserController extends Controller
         return $data;
     }
 
-    public function latestUsers(){
-        $users = User::orderBy('id','DESC')->limit(5)->get();
+    public function latestUsers()
+    {
+        $users = User::orderBy('id', 'DESC')->limit(5)->get();
         $data = array(
             'status' => 'success',
             'code' => '200',
@@ -352,9 +320,7 @@ class UserController extends Controller
         );
 
         return $data;
-
     }
-
 }
 
 /* JSON EXAMPLE
@@ -366,7 +332,4 @@ class UserController extends Controller
 "password": "mafer123",
 "password_confirmation" : "mafer123"
 }
-
-
 */
-

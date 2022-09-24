@@ -29,7 +29,7 @@ Route::get('/', function () {
 // USER ROUTES
 Route::post('api/register', [UserController::class,'register']);
 Route::post('api/login', [UserController::class,'login']);
-Route::put('api/update', [UserController::class,'update']);
+Route::post('api/update', [UserController::class,'update']);
 Route::get('api/users', [UserController::class,'getAll']);
 Route::get('api/latest-users', [UserController::class,'latestUsers']);
 
