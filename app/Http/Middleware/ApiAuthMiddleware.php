@@ -1,10 +1,7 @@
 <?php
-
 namespace App\Http\Middleware;
-
 use Closure;
 use Illuminate\Http\Request;
-
 class ApiAuthMiddleware
 {
     /**
@@ -20,12 +17,9 @@ class ApiAuthMiddleware
               $token = $request->header('Authorization');
               $jwtAuth = new \JwtAuth();
               $checkToken = $jwtAuth->checkToken($token);   
-      
               if($checkToken){
                 return $next($request);
-            
               }else{
-
                 $data = array(
                     'status' => 'error',
                     'code' => '400',
@@ -33,6 +27,5 @@ class ApiAuthMiddleware
                 );
                 return response()->json($data, $data['code']);
             }
-
     }
 }

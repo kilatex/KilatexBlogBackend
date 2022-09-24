@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use  App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Helpers\JwtAuth;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -19,33 +17,23 @@ class UserController extends Controller
 
     public function update(Request $request)
     {
-
-        // GET INFO 
-
-
-        $token = $request->header('Authorization');
-        $jwtAuth = new \JwtAuth();
-        $user = $jwtAuth->checkToken($token, true);
-
-       // VALIDATE INFO
+        // VALIDATE INFO
         $validate = \Validator::make($request->all(), [
             'name' => 'max:100',
             'surname' => 'max:100',
-            'username' => 'string|max:255|unique:users,username,' . $user->sub,
+            'username' => 'string|max:255|unique:users,username,' .'user.id',
             'description' => 'string|max:255'
         ]);
-
         if ($validate->fails()) {
             $data =  array(
                 'status' => 'error',
                 'code' => '400',
                 'message' => 'Updated Failed',
                 'errors' => $validate->errors()
-            );
-            
+            );    
         } 
         else {
-            $user = User::where('id',$user->sub)->first();
+          // Use Auth:user() and not ->  $user = User::where('id','user.id')->first();
             $user->update($request->all());
             $data =  array(
                 'status' => 'success',
@@ -53,26 +41,16 @@ class UserController extends Controller
                 'message' => 'Updated success',
                 'user' => $user
             );
-
         }
-
-
-        // RETURN ARRAY
         return response()->json($data);
     }
 
     public function uploadAvatar(Request $request)
     {
-        // GET IMAGE
-        $path1 = $request->file('file0');
-        $token = $request->header('Authorization');
-        $jwtAuth = new \JwtAuth();
-        $user = $jwtAuth->checkToken($token, true);
-
+        $path1 = $request->file('file0');         // GET IMAGE
         $validate = \Validator::make($request->all(), [
             'file0' => 'required|image'
         ]);
-
 
         if ($validate->fails()) {
             $data =  array(
@@ -82,55 +60,40 @@ class UserController extends Controller
                 'errors' => $validate->errors()
             );
         } else {
-            $user_auth = User::find($user->sub);
-
-
+          // Use Auth:user() and not ->  $user_auth = User::find($user->sub);
             //IMAGE 1
             $image_path_name1 = time() . $path1->getClientOriginalName();
-
-
             // SAVE IMAGE     
             Storage::disk('users')->put($image_path_name1, \File::get($path1));
             $user_auth->image = $image_path_name1;
             $user_auth->save();
-
-
             $data = array(
                 'status' => 'success',
                 'code' => '200',
                 'image' => $image_path_name1
             );
         }
-
-
-
-
         return response()->json($data);
     }
 
     public function getAvatar($filename)
     {
-
         $isset = Storage::disk('users')->exists($filename);
-
         if ($isset) {
             $file =  Storage::disk('users')->get($filename);
-
             return new Response($file, 200);
-        } else {
-            $data = array(
-                'status' => 'error',
-                'code' => '404',
-                'message' => 'Avatar not found',
-
-            );
         }
+        $data = array(
+            'status' => 'error',
+            'code' => '404',
+            'message' => 'Avatar not found',
+        );
+        return response()->json($data);
     }
 
     public function getUser($id)
     {
         $user = User::find($id);
-
         if (is_object($user)) {
             $data = array(
                 'status' => 'success',
@@ -139,27 +102,22 @@ class UserController extends Controller
             );
         } else {
             $data = array(
-
                 'status' => 'error',
                 'code' => '404',
                 'message' => 'User not found',
-
             );
         }
-
-        return $data;
+        return response()->json($data);
     }
 
     public function getAll()
     {
-
         $users = User::orderBy('id', 'DESC')->paginate('6');
         $data = array(
             'status' => 'success',
             'code' => '200',
             'users' => $users,
         );
-
         return $data;
     }
 
@@ -171,19 +129,6 @@ class UserController extends Controller
             'code' => '200',
             'users' => $users,
         );
-
-        return $data;
+        return response()->json($data);
     }
 }
-
-
-/* JSON EXAMPLE
-{
-"name" : "Mafer",
-"surname" :  "Mafer",
-"email" : "mafer@mafer.com",
-"username": "maferrr"
-"password": "mafer123",
-"password_confirmation" : "mafer123"
-}
-*/

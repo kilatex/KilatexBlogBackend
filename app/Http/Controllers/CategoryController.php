@@ -14,16 +14,13 @@ class CategoryController extends Controller
         $this->middleware('api.auth', ['except' => ['index','show']]);
      }
 
-    public function index(Request $request){
+    public function index(){
         $categories = Category::all();
-
         return response()->json($categories);
     }
 
     public function show($id){
-
         $category = Category::find($id)->first();
-      
         if(is_object($category)){
             $data = array(
                 'status' => 'success',
@@ -36,36 +33,22 @@ class CategoryController extends Controller
                 'code' => '404',
                 'message' => 'category not found'
             );  
-    
         }
-       
         return response()->json($data);
     }
 
-
     public function store(Request $request){
-
-        // GET INFO
-        $json = $request->input('json');
+        $json = $request->input('json'); // GET INFO
         $params_array = json_decode($json,true);
-
-  
-
-        if(!empty($params_array)){
-            
-            // VALIDATE INFO
+        if(!empty($params_array)){  
             $validate = \Validator::make($params_array,[
                 'name' => 'required|string'
             ]);
-
             if(!$validate->fails()){
                 // SAVE CATEGORY
                 $category = new Category();
                 $category->name = $params_array['name'];
-
                 $category->save();
-
-
                 $data = array(
                     'status' => 'success',
                     'code' => '200',
@@ -79,10 +62,7 @@ class CategoryController extends Controller
                     'message' => 'Category not registered',
                     'error' => $validate->errors()
                 );
-            }
-        
-
-            
+            }            
         }else{
             $data = array(
                 'status' => 'error',
@@ -90,45 +70,28 @@ class CategoryController extends Controller
                 'message' => 'Category not registered'
             );
         }
-   
-
-
-        // RETURN RESULT
-
-        return response()->json($data);
+        return response()->json($data);  // RETURN RESULT
     }
-
-
 
     public function update($id,Request $request){
         // GET INFO
         $json = $request->input('json');
-        $params_array = json_decode($json,true);
-
-    
-
+        $params_array = json_decode($json,true);  
         if(!empty($params_array)){
-            
-            // VALIDATE INFO
             $validate = \Validator::make($params_array,[
                 'name' => 'required|string'
             ]);
 
             if(!$validate->fails()){
-                // SAVE CATEGORY
                 $category = Category::find($id);
                 $category->name = $params_array['name'];
-
                 $category->update();
-
-
                 $data = array(
                     'status' => 'success',
                     'code' => '200',
                     'message' => 'Category  updated',
-                    'category' => $category->name
+                    'category' => $category
                 );
-
             }else{
                 $data = array(
                     'status' => 'error',
@@ -136,10 +99,7 @@ class CategoryController extends Controller
                     'message' => 'Category NOT Updated',
                     'error' => $validate->errors()
                 );
-            }
-        
-
-            
+            }            
         }else{
             $data = array(
                 'status' => 'error',
@@ -147,13 +107,6 @@ class CategoryController extends Controller
                 'message' => 'Category not updated'
             );
         }
-    
-
-
-        // RETURN RESULT
-
-        return response()->json($data);
+        return response()->json($data); // RETURN RESULT
     }
-
-
 }
