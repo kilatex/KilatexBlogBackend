@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('api.auth', ['except' => ['register', 'login',]]);
+        $this->middleware('auth:api');
     }
 
     public function update(Request $request)
