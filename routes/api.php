@@ -33,6 +33,7 @@ Route::group([
     Route::post('/upload-avatar', [UserController::class,'uploadAvatar']);
     Route::get('/avatar/{filename}', [UserController::class,'getAvatar']);
     Route::get('/get/{id}', [UserController::class,'getUser']);
+    Route::get('/search/{username}', [UserController::class,'search']);
 });
 
 // Category ROUTES

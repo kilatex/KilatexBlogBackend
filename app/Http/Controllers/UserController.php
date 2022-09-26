@@ -112,7 +112,7 @@ class UserController extends Controller
 
     public function getAll()
     {
-        $users = User::orderBy('id', 'DESC')->paginate('6');
+        $users = User::where('id','!=',auth()->user()->id)->orderBy('id', 'DESC')->paginate('6');
         $data = array(
             'status' => 'success',
             'code' => '200',
@@ -123,12 +123,30 @@ class UserController extends Controller
 
     public function latestUsers()
     {
-        $users = User::orderBy('id', 'DESC')->limit(5)->get();
+        $users = User::where('id','!=',auth()->user()->id)->orderBy('id', 'DESC')->limit(5)->get();
         $data = array(
             'status' => 'success',
             'code' => '200',
             'users' => $users,
         );
         return response()->json($data);
+    }
+    
+    public function search($username){
+        $username = trim($username);
+        $users = User::Where('username','LIKE', '%'.$username.'%')
+                ->orWhere('name','LIKE', '%'.$username.'%') 
+                ->OrWhere('surname','LIKE','%'.$username.'%')
+                ->orderBy('id','desc')
+                ->get();
+
+        $data = array(
+            'status' => 'success',
+            'code' => '200',
+            'users' => $users,
+        );
+        
+        return response()->json($data);
+
     }
 }
