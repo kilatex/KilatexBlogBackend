@@ -138,7 +138,7 @@ class UserController extends Controller
                 ->orWhere('name','LIKE', '%'.$username.'%') 
                 ->OrWhere('surname','LIKE','%'.$username.'%')
                 ->orderBy('id','desc')
-                ->get();
+                ->paginate('6');
 
         $data = array(
             'status' => 'success',
@@ -146,7 +146,6 @@ class UserController extends Controller
             'users' => $users,
         );
         
-        return response()->json($data);
-
+        return $data;
     }
 }
